@@ -27,16 +27,63 @@ The dataset contains transactions made by credit cards in September 2013 by Euro
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Structure & File Descriptions
 
-The codebase is split into 6 modular, task-specific Jupyter Notebooks. In each notebook, **each cell performs exactly one logical task** (e.g. imports, scaling, resampling, training, predicting, evaluation).
+The codebase is split into 6 modular, task-specific Jupyter Notebooks and helper configuration files. In each notebook, **each cell performs exactly one logical task** (e.g., imports, scaling, resampling, training, predicting, evaluation).
 
-* 📄 **[01_data_analysis.ipynb](01_data_analysis.ipynb)**: Quick Exploratory Data Analysis (EDA) of class imbalance, statistical distributions, and feature correlations.
-* 📄 **[02_logistic_regression.ipynb](02_logistic_regression.ipynb)**: Trains and evaluates Logistic Regression using Undersampling vs. SMOTE.
-* 📄 **[03_random_forest.ipynb](03_random_forest.ipynb)**: Trains and evaluates Random Forest using Undersampling vs. SMOTE (optimized using parallel execution and tree depth limits).
-* 📄 **[04_xgboost.ipynb](04_xgboost.ipynb)**: Trains and evaluates XGBoost Classifier using Undersampling vs. SMOTE.
-* 📄 **[05_anomaly_detection.ipynb](05_anomaly_detection.ipynb)**: Unsupervised Anomaly Detection using Isolation Forest trained purely on normal transaction patterns.
-* 📄 **[06_model_comparison.ipynb](06_model_comparison.ipynb)**: Compiles results, plots comparative ROC and Precision-Recall curves, and visualizes confusion matrices and metrics side-by-side.
+### 1. 📄 [01_data_analysis.ipynb](01_data_analysis.ipynb) (Exploratory Data Analysis)
+* **Goal:** Inspect dataset health, check features, and analyze the severe target class imbalance.
+* **Libraries:** `numpy`, `pandas`, `matplotlib`, `seaborn`.
+* **Key Tasks:**
+  * Displays shape, data types, and checks for **missing values** (verifying 0 null values).
+  * Calculates class imbalance: **0.1727% fraud** (492 cases) vs. **99.8273% normal** (284,315 cases).
+  * Visualizes the skewed distributions of transaction `Time` and `Amount` (on log scales).
+  * Analyzes feature correlations with the target `Class` to identify key patterns.
+
+### 2. 📄 [02_logistic_regression.ipynb](02_logistic_regression.ipynb) (Logistic Regression)
+* **Goal:** Build a linear model baseline under Undersampling and SMOTE.
+* **Key Tasks:**
+  * Scales skewed numerical features `Time` and `Amount` using `RobustScaler` (minimizes outlier impact).
+  * Splits features into a stratified 80/20 train-test split.
+  * Implements **Random Undersampling** on the training set (~788 balanced transactions), trains Logistic Regression, and logs test metrics.
+  * Implements **SMOTE** on the training set (~454k oversampled transactions), trains Logistic Regression, and logs test metrics.
+  * Measures F1, Precision, Recall, ROC-AUC, and PR-AUC.
+
+### 3. 📄 [03_random_forest.ipynb](03_random_forest.ipynb) (Random Forest Classifier)
+* **Goal:** Train a non-linear ensemble tree model under both imbalance resampling methods.
+* **Key Tasks:**
+  * Scales and splits data in the same manner as the baseline.
+  * Trains Random Forest on **Undersampled** data utilizing multi-core processing (`n_jobs=-1`).
+  * Trains Random Forest on **SMOTE** data, restricting `max_depth=12` to prevent overfitting on oversampled data and optimize training speeds.
+  * Evaluates and logs confusion matrices and classification reports.
+
+### 4. 📄 [04_xgboost.ipynb](04_xgboost.ipynb) (XGBoost Classifier)
+* **Goal:** Implement a high-performance Gradient Boosted Decision Tree (GBDT) model.
+* **Key Tasks:**
+  * Trains XGBoost under **Undersampling** (balanced set).
+  * Trains XGBoost under **SMOTE** oversampling using `eval_metric='logloss'` and multi-core acceleration.
+  * Compares metrics to see the impact of SMOTE on reducing false positive alarms.
+
+### 5. 📄 [05_anomaly_detection.ipynb](05_anomaly_detection.ipynb) (Isolation Forest Anomaly Detection)
+* **Goal:** Perform unsupervised anomaly detection, simulating a real-world scenario with no historical fraud labels.
+* **Key Tasks:**
+  * Separates normal transactions (`Class == 0`) in the training set to learn normal behavior.
+  * Trains the Isolation Forest model on normal transactions (`contamination` parameter set to the actual fraud ratio).
+  * Evaluates anomaly scores on the full test set (mapping outlier predictions `-1` to fraud `1` and inlier `1` to normal `0`).
+  * Compares unsupervised performance metrics (e.g., Precision, Recall, F1) to the supervised models.
+
+### 6. 📄 [06_model_comparison.ipynb](06_model_comparison.ipynb) (Overall Comparison & Visualizations)
+* **Goal:** Provide a centralized comparison suite with comprehensive visualizations.
+* **Key Tasks:**
+  * Trains all three supervised models (Logistic Regression, Random Forest, XGBoost) under both resampling frameworks.
+  * Plots **ROC Curves** side-by-side to visualize true positive vs. false positive rates.
+  * Plots **Precision-Recall (PR) Curves** side-by-side (the most informative plot for highly imbalanced labels).
+  * Displays a **2x3 grid of Confusion Matrices** comparing all model outputs.
+  * Compiles a metrics table and plots a **triple bar chart** comparing Recall, Precision, and F1-Scores.
+
+### 7. Helper & Git Files
+* 📄 **[.gitignore](.gitignore)**: Excludes the 150MB `creditcard.csv` dataset, Jupyter Notebook checkpoints (`.ipynb_checkpoints/`), log files, and Python bytecode caches from git tracking.
+* 📄 **[README.md](README.md)**: Main documentation describing setup, metrics, project layout, and results.
 
 ---
 
